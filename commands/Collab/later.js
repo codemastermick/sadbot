@@ -11,7 +11,7 @@ module.exports = class extends Command {
             runIn: ['text', 'group'],
             requiredPermissions: [],
             requiredSettings: [],
-            aliases: [],
+            aliases: ["requeue"],
             autoAliases: true,
             bucket: 1,
             cooldown: 0,
@@ -21,7 +21,7 @@ module.exports = class extends Command {
             guarded: false,
             nsfw: false,
             permissionLevel: 0,
-            description: 'Starts a new round of collaborative art.',
+            description: 'Pass your collab turn for now, allowing yourself to be chosen again later.',
             extendedHelp: '',
             usage: '',
             usageDelim: undefined,
@@ -32,22 +32,29 @@ module.exports = class extends Command {
 
     async run(message, [...params]) {
         // This is where you place the code you want to run for your command
-        this.client.guilds.cache.first().members.cache.forEach(async member => {
-            (await this.client.users.fetch(member.id)).settings.update("collab_done", false);
-            (await this.client.users.fetch(member.id)).settings.update("collab_skipped", false);
-        });
-        (await this.client.users.fetch(message.author.id)).settings.update("collab_done", true);
+        if((await this.client.users.fetch(message.author.id)).settings.get("collab_skipped")){
+            (await this.client.users.fetch(message.author.id)).settings.update("experience", points - 1);
+            (await this.client.users.fetch(message.author.id)).settings.update("collab_done", true);
+        }
+
         const collaborators = [];
         this.client.users.cache.forEach(user => {
-            if ((user.settings.collab === true && user.settings.collab_done === false) && (user.settings.id !== message.author.id)) {
+            if ((user.settings.collab === true && user.settings.collab_done === false && user.settings.collab_skipped===false) && (user.settings.id !== message.author.id)) {
                 collaborators.push(user);
             }
         });
         if (collaborators.length == 0) {
+            this.client.users.cache.forEach(lateUser => {
+                if ((lateUser.settings.collab === true && lateUser.settings.collab_done === false && lateUser.settings.collab_skipped===true) && (lateUser.settings.id !== message.author.id)) {
+                    collaborators.push(lateUser);
+                }
+            });
             message.send('There does not seem to be anyone left to go. Good work everyone!');
         }
+        (await this.client.users.fetch(message.author.id)).settings.update("collab_skipped", true);
+
         const random = collaborators[~~(Math.random() * collaborators.length)];
-        message.send(`<@${random.id}>, you're up first!`);
+        message.send(`That's alright, <@${random.id}> how about you?`);
     }
 
     async init() {

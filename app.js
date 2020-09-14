@@ -38,6 +38,10 @@ Client.defaultUserSchema.add('collab_done', 'Boolean', {
     default: false,
     configurable: false
 });
+Client.defaultUserSchema.add('collab_skipped', 'Boolean', {
+    default: false,
+    configurable: false
+});
 Client.defaultUserSchema.add('passes', 'Integer', {
     default: 0,
     configurable: false
