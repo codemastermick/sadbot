@@ -51,6 +51,8 @@ module.exports = class extends Monitor {
         await message.author.settings.update([['experience', nextValue]]);
         await message.author.settings.update([['points_today', points_today]]);
 
+        this.client.channels.cache.get('741408636793782346').send(`${message.author.username} was awarded 1 point for posting in ${this.client.channels.cache.get(message.channel.id)}`);
+
         if(nextValue>=1000){
             // add diamond 741282301081550988
             (await message.guild.members.fetch(message.author.id)).roles.add('741282301081550988');
